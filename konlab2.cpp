@@ -115,13 +115,21 @@ double FindMn(vector<double> x) {
     return c;
 }
 
+
+
 int main()
 {
     setlocale(0, "");
     //Инициализация переменных
     double a, b, c, d, e, y, x, H, znam;
+    
+    //Для критерия остановки
+    int m = 10; double eps = 0.001; 
+    vector<double> stop;
+    stop.push_back(0); stop.push_back(0);
+
     //Кол-во итераций (плюс один)
-    int Nmax = 11;
+    int Nmax = 100;
     cout << "a: "; cin >> a; cout << "/"; cin >> znam;
     a = (double) a / znam; cout << endl;
     cout << "b: "; cin >> b; cout << "/"; cin >> znam;
@@ -142,7 +150,6 @@ int main()
     classTest(a, b);
     
     //Рассчет y и x решением системы уравнений
-    
     cout << "Перейдем к нахождению седловой точки игры, найдя вначале значения x и y (решив систему уравнений)," << endl << "затем подставив полученные значения в функцию ядра:" << endl;
     y = yCalc(a, b, c, d, e);
     cout << "y = -(cx + d)/2b = " << y << endl;
@@ -156,7 +163,11 @@ int main()
 
     //Решение численным способом  -------------------------------------------
     cout << "----- Решение численным способом -----" << endl;
-    for (int N = 2; N < Nmax; N++) {
+    
+    //for (int N = 2; N < Nmax; N++) {
+    int st = 1; double preveps;
+    int N = 2; //Счетчик итераций
+    while (st) {
         cout << endl << "-------------------------------" << endl << "N = " << N << endl;
         int n = N + 1;
         vector<vector<double>> matr;
@@ -177,9 +188,9 @@ int main()
                 double tempY = (double)j / N;
                 double H = HCalc(tempX, tempY, a, b, c, d, e);
                 matr[i][j] = H;
-                cout << setprecision(3) << setw(7) << matr[i][j] << " ";
+                cout << setprecision(3);
             }
-            cout << endl;
+            //cout << endl;
         }
 
         //Проверка на наличие седловой точки - плюс решение если седловая точка есть
@@ -191,6 +202,8 @@ int main()
                     cout << "x = " << (double) (1.0 / N) * i << endl;
                     cout << "y = " << (double) (1.0 / N) * j << endl;
                     sedlo = 1;
+                    
+                    stop.push_back(matr[i][j]); //Для критерия остановки
                 }
             }            
         }
@@ -202,8 +215,7 @@ int main()
             int k, A, B; A = 0; B = 0;
             vector<double> x; for (int i = 0; i < n; i++) x.push_back(matr[i][A]);
             vector<double> y; for (int i = 0; i < n; i++) y.push_back(matr[B][i]);
-            //int x1, x2, x3, y1, y2, y3;
-
+            
             //В качестве счетчика итераций / знаменатель для столбцов пороговых значений
             k = 2;
 
@@ -217,46 +229,21 @@ int main()
 
             vector<double> delX; vector<double> delY;
 
-            //Первая строка таблицы - наименование столбцов (для красивого оформления)
-            /*cout << setw(4) << "k" << " | " << "A" << " " << "B" << " | ";
-
-            for (int i = 0; i < n; i++)
-                cout << setw(5) << "x" << i + 1;
-
-            cout << " | ";
-
-            for (int i = 0; i < n; i++)
-                cout << setw(5) << "y" << i + 1;
-
-            cout << " | ";
-            cout << setw(7) << "(1/k)v-" << " " << setw(7) << "(1/k)V_"; cout << " | "; //Пороговые значение
-            cout << setw(7) << "(1/k)v-" << " " << setw(7) << "(1/k)V_"; cout << " | "; //Посчитанные пороговые значения
-            cout << setw(7) << "e"; cout << " | "; //Точность
-            cout << setw(6) << "v"; //Цена игры
-            cout << endl << "--------------------------------------------------------------------------------------------------------" << endl;
-            */
-
             //Остальные строки
             for (int i = 0; i < k; i++) { // i - строка
-                //cout << setw(4) << i + 1 << " | " << A + 1 << " " << B + 1 << " | ";
-                //for (int j = 0; j < n; j++) cout << setw(5) << x[j] << " ";
-                //cout << " | ";
-                //for (int j = 0; j < n; j++) cout << setw(5) << y[j] << " ";
-
+                
                 A = FindMax(x, A);
                 B = FindMin(y, B);
                 cx[A]++; cy[B]++;
 
                 if (i != 0) {
-                    //cout << " | " << setw(4) << x[A] << "/" << setw(2) << i + 1 << " " << setw(4) << y[B] << "/" << setw(2) << i + 1 << " | ";
+                    
                     double X; double Y; X = (double)x[A] / (i + 1); Y = (double)y[B] / (i + 1);
-                    //cout << setw(7) << X << " " << setw(7) << Y;
                     delX.push_back(X); delY.push_back(Y);
                 }
                 if (i == 0) {
-                    //cout << " | " << setw(4) << x[A] << "   " << setw(6) << y[B] << "   | ";
+                    
                     double X; double Y; X = x[A] / 1.; Y = y[B] / 1.;
-                    //cout << setw(7) << X << " " << setw(7) << Y;
                     delX.push_back(X); delY.push_back(Y);
                 }
 
@@ -268,38 +255,18 @@ int main()
                 b = FindMx(delY);
                 c = a - b;
 
-                //if (i != 0) cout << " | " << setw(7) << setprecision(4) << c << " | " << setw(6) << setprecision(4) << (a + b) / 2.0 << endl;
-                //if (i == 0) cout << " | " << setw(7) << setprecision(4) << c << " | " << setw(6) << setprecision(4) << (a + b) / 2.0 << endl;
-
                 //Результаты БР метода
                 if (c <= 0.005) {
-                    //cout << "min (1/k)v- = " << a << endl;
-                    //cout << "max (1/k)V_ = " << b << endl;
                     cout << "Погрешность = " << c << endl;
                     cout << "H = " << (a + b) / 2.0 << endl;
                     i = k; k--; cx[A]--; cy[B]--;
+                    
+                    stop.push_back((a + b) / 2.0); //Для критерия остановки
+                    //cout << "dobavleno" << stop[N];
                 }
                 if (c > 0.005) k++;
             }
-
-            //Результаты БР метода
-            /*
-            cout << "Приближенные смешанные стратегии: " << endl;
-            cout << "x[k]~ = (";
-            for (int j = 0; j < n; j++) {
-                cout << cx[j] << "/" << k;
-                if (j != n - 1) cout << ", ";
-            }
-            cout << ")" << endl;
-
-            cout << "y[k]~ = (";
-            for (int j = 0; j < n; j++) {
-                cout << cy[j] << "/" << k;
-                if (j != n - 1) cout << ", ";
-            }
-            cout << ")" << endl;
-            */
-
+                     
             double cxmax, cymax;
             
             double max = -100000.0;
@@ -322,6 +289,22 @@ int main()
             cout << "y = " << (double)(1.0 / N) * cymax << endl;
                                  
         }
+               
+
+        if (N > m + 2) {
+            int check = 0;
+            for (int i = 0; i < m; i++) {
+                if ((stop[N - i] - stop[N - i - 1]) <= eps) check++;
+            }
+            if (check == m) {
+                st = 0;
+                cout << "За последние " << m << " итераций оценка игры изменилась не более чем на " << eps << ", следовательно срабатывает критерий остановки." << endl;
+            }
+        }
+        
+        N++;
     }
 
 }
+
+
